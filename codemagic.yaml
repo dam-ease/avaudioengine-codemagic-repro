@@ -1,0 +1,64 @@
+workflows:
+  avaudioengine-repro:
+    name: AVAudioEngine mainMixerNode repro
+    instance_type: mac_mini_m2
+    max_build_duration: 10
+
+    environment:
+      xcode: 26.6
+
+    scripts:
+      - name: Show build environment
+        script: |
+          set -e
+          echo "=== macOS ==="
+          sw_vers
+          echo
+          echo "=== Architecture ==="
+          uname -m
+          echo
+          echo "=== Xcode ==="
+          xcodebuild -version
+          echo
+          echo "=== macOS SDK ==="
+          xcrun --sdk macosx --show-sdk-path
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Compile AudioProbe
+        script: |
+          set -e
+          xcrun --sdk macosx swiftc \
+            -swift-version 5 \
+            -parse-as-library \
+            -target arm64-apple-macos13.0 \
+            -sdk "$(xcrun --sdk macosx --show-sdk-path)" \
+            -framework AVFoundation \
+            AudioProbe.swift \
+            -o AudioProbe
+
+          echo "Compiled successfully:"
+          file AudioProbe
+
+      - name: Run AVAudioEngine playback probe
+        script: |
+          set +e
+          ./AudioProbe playback
+          status=$?
+          set -e
+
+          echo
+          echo "Probe exit status: $status"
+
+          if [ "$status" -eq 124 ]; then
+            echo "RESULT: REPRODUCED"
+            echo "AVAudioEngine.mainMixerNode did not return within 25 seconds."
+          elif [ "$status" -eq 0 ]; then
+            echo "RESULT: NOT REPRODUCED"
+            echo "AVAudioEngine.mainMixerNode returned successfully."
+          else
+            echo "RESULT: INCONCLUSIVE"
+            echo "The probe exited with unexpected status $status."
+          fi
+
+          # Keep the diagnostic workflow green so the complete logs remain easy to inspect.
+          exit 0
