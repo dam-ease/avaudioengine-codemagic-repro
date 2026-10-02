@@ -36,8 +36,7 @@ workflows:
             AudioProbe.swift \
             -o AudioProbe
 
-          echo "Compiled successfully:"
-          file AudioProbe
+          ./AudioProbe playback
 
       - name: Run AVAudioEngine playback probe
         script: |
