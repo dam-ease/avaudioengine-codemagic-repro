@@ -28,13 +28,13 @@ workflows:
         script: |
           set -e
           xcrun --sdk macosx swiftc \
-            -swift-version 5 \
-            -parse-as-library \
-            -target arm64-apple-macos13.0 \
-            -sdk "$(xcrun --sdk macosx --show-sdk-path)" \
-            -framework AVFoundation \
-            AudioProbe.swift \
-            -o AudioProbe
+          -swift-version 5 -parse-as-library \
+          -target arm64-apple-macos13.0 \
+          -sdk "$(xcrun --sdk macosx --show-sdk-path)" \
+          -framework AVFoundation \
+          AudioProbe.swift -o AudioProbe
+
+          ./AudioProbe playback
 
           echo "Compiled successfully:"
           file AudioProbe
